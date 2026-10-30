@@ -4,19 +4,28 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gausswatch"
-version = "0.0.1"
+version = "0.1.0"
 description = "Automatic diagnosis and monitoring for 3D Gaussian Splatting training"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "jaccen" }]
+keywords = ["3dgs", "gaussian-splatting", "training", "monitoring", "diagnostics"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Visualization",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jaccen/GaussWatch"
+Issues = "https://github.com/jaccen/GaussWatch/issues"
+Documentation = "https://github.com/jaccen/GaussWatch/tree/main/examples"
 
 [project.optional-dependencies]
 test = ["pytest>=7"]

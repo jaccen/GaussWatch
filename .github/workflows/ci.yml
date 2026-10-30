@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # core is stdlib-only; torch-dependent tests self-skip via importorskip
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: ubuntu-latest
+            python: "3.11"
+          - os: ubuntu-latest
+            python: "3.12"
+          - os: windows-latest
+            python: "3.12"   # panel uses http.server threads; cover Windows paths
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install package with test extras
+        run: pip install -e .[test]
+      - name: Run test suite
+        run: python -m pytest tests/ -q --tb=short
+      - name: Import chain smoke (no torch installed)
+        run: python -c "import gausswatch; from gausswatch.integrations.gsplat import GsplatAdapter; from gausswatch.panel import PanelServer; print('ok', gausswatch.__version__)"

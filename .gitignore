@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+build/
+dist/
 .venv/
 venv/
 .env
@@ -19,4 +21,6 @@ runs/
 .DS_Store
 Thumbs.db
 
-# Upstream reference snapshots (mixed licenses, incl. Inria non-commercial) - local .temp only.temp/
+# Upstream reference snapshots (mixed licenses, incl. Inria non-commercial)
+# Local .temp only — never tracked
+.temp/

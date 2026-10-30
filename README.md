@@ -1,5 +1,8 @@
 # GaussWatch
 
+[![CI](https://github.com/jaccen/GaussWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/jaccen/GaussWatch/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 > Automatic diagnosis and monitoring for 3D Gaussian Splatting training.
 > 把 3DGS 训练失败从"重跑+肉眼排查"变成"实时检测+自动归因+修复建议"。
 
@@ -32,9 +35,10 @@
 ```bash
 git clone https://github.com/jaccen/GaussWatch.git
 cd GaussWatch
+pip install -e .[test]             # 纯标准库，秒装；[test] 仅添 pytest
 python examples/demo.py            # 控制台报告：模拟训练触发 11 条告警
 python examples/demo.py --panel    # 另加 Web 面板 http://127.0.0.1:8420
-python -m pytest tests/ -q         # 65 passed
+python -m pytest tests/ -q         # 80 passed, 2 skipped（torch 提取器测试留 GPU 盒跑，见 scripts/cluster_verify.sh）
 ```
 
 在自己的训练循环中接入（只上报已有数字，无需改计算图）：
