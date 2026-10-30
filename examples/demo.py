@@ -37,14 +37,15 @@ def simulate(m: TrainingMonitor):
     timeline = [
         # (step, event kwargs for on_step)
         (500,  dict(vram_allocated=8 * GiB, num_gaussians=50_000, grad_norm=1.1)),
-        (1000, dict(vram_allocated=9 * GiB, num_gaussians=60_000, grad_norm=1.15,
-                    train_psnr=29.8, test_psnr=28.5)),
+        (1000, dict(vram_allocated=9 * GiB, num_gaussians=60_000, grad_norm=1.15)),
         (1500, dict(vram_allocated=10 * GiB, num_gaussians=80_000, grad_norm=1.2)),
-        (2000, dict(vram_allocated=11 * GiB, num_gaussians=110_000,
-                    train_psnr=30.4, test_psnr=28.9)),
+        (2000, dict(vram_allocated=11 * GiB, num_gaussians=110_000)),
     ]
     for step, kw in timeline:
         m.on_step(step, **kw)
+
+    # eval passes are separate events (like gsplat Trainer.eval)
+    m.on_eval(train_psnr=29.8, test_psnr=28.5)
 
     m.on_refine(dead_fraction=0.42, pruned_count=200, total_gaussians=10_000)
 
@@ -52,8 +53,8 @@ def simulate(m: TrainingMonitor):
     m.on_refine(dead_fraction=0.68, pruned_count=800, total_gaussians=10_000)
 
     # eval scissors: train 31.2 vs test 27.9 -> 3.3dB gap (KB CF-03 threshold 3dB)
-    m.on_step(3000, vram_allocated=12 * GiB, num_gaussians=140_000,
-              grad_norm=1.18, train_psnr=31.2, test_psnr=27.9)
+    m.on_step(3000, vram_allocated=12 * GiB, num_gaussians=140_000, grad_norm=1.18)
+    m.on_eval(train_psnr=30.4, test_psnr=28.9)   # still climbing
 
     banner("densify events (R3 death cascade)")
 
@@ -65,10 +66,12 @@ def simulate(m: TrainingMonitor):
     # pixels (KB OF-06 + OF-04); silent zero grad (KB OF-03)
     m.on_step(4000, grad_norm=0.0, reg_loss=14.0, render_loss=0.7,
               loss_mask_coverage=0.95)
+    m.on_eval(train_psnr=31.2, test_psnr=27.9)   # 3.3dB scissors gap
 
     # NaN collapse after stable steps (gsplat#248 signature) + post-peak
     # test-PSNR decline (KB CF-05)
-    m.on_step(4500, train_psnr=31.5, test_psnr=27.5, grad_norm=float("nan"))
+    m.on_step(4500, grad_norm=float("nan"))
+    m.on_eval(train_psnr=31.5, test_psnr=27.5)   # two declines after peak 28.9
     # a relocate event lands exactly at step 4500 -> becomes the attribution
     # anchor for the crash one step later (R4)
     m.on_refine(relocated_count=30_000, alive_count=140_000)

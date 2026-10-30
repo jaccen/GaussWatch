@@ -55,14 +55,14 @@ def test_r10_uses_test_history_only():
     m = TrainingMonitor()
     evals = [(29.8, 28.5), (30.4, 28.9), (31.2, 27.9), (31.5, 27.5)]
     for i, (tr, te) in enumerate(evals, start=1):
-        m.on_step(i * 100, train_psnr=tr, test_psnr=te)
+        m.on_eval(train_psnr=tr, test_psnr=te)
     r10 = [a for a in m.alerts if a.rule == "R10"]
     assert any("declining" in a.message for a in r10)
 
 
 def test_r10_scissors_via_monitor():
     m = TrainingMonitor()
-    m.on_step(100, train_psnr=30.0, test_psnr=24.0)
+    m.on_eval(train_psnr=30.0, test_psnr=24.0)
     assert any(a.rule == "R10" and "overfitting" in a.message for a in m.alerts)
 
 
@@ -116,6 +116,7 @@ def test_callback_exception_swallowed():
 def test_partial_events_never_crash():
     m = TrainingMonitor()
     m.on_step(0)
+    m.on_eval()
     m.on_refine()
     m.on_crash(1, "RuntimeError")
     m.on_export()

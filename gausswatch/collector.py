@@ -134,8 +134,7 @@ class TrainingMonitor:
     def on_step(self, step: int, *, vram_allocated: int | None = None,
                 vram_total: int | None = None, num_gaussians: int | None = None,
                 grad_norm: float | None = None, scales_finite: bool | None = None,
-                opacities_finite: bool | None = None, train_psnr: float | None = None,
-                test_psnr: float | None = None, reg_loss: float | None = None,
+                opacities_finite: bool | None = None, reg_loss: float | None = None,
                 render_loss: float | None = None,
                 loss_mask_coverage: float | None = None):
         self._step = step
@@ -159,15 +158,27 @@ class TrainingMonitor:
             s9 = TrainingSnapshot(vram_history=list(self.vram_history),
                                   num_gaussians_history=list(self.num_gaussians_history))
             self._emit(check_r9(s9))
-        # eval scissors (R10) and loss balance (R11) when eval numbers arrive
+        # eval scissors (R10) live on on_eval; loss balance (R11) per-step
+        if reg_loss is not None and render_loss is not None:
+            self._emit(check_r11(reg_loss, render_loss, loss_mask_coverage))
+
+    def on_eval(self, *, train_psnr: float | None = None,
+                test_psnr: float | None = None):
+        """Call once per evaluation pass (R10). Evaluation is a separate
+        event from training steps: gsplat's Trainer.eval and the official
+        repo's training_report both emit eval metrics out of the step loop.
+
+        train and test PSNR may arrive in separate calls (e.g. gsplat's
+        wrap_eval reads them from per-stage json files); the scissors check
+        pairs the most recent value of each series."""
         if train_psnr is not None:
             self.train_psnr_history.append(train_psnr)
         if test_psnr is not None:
             self.test_psnr_history.append(test_psnr)
-        if train_psnr is not None and test_psnr is not None:
-            self._emit(check_r10(train_psnr, test_psnr, list(self.test_psnr_history)))
-        if reg_loss is not None and render_loss is not None:
-            self._emit(check_r11(reg_loss, render_loss, loss_mask_coverage))
+        if self.train_psnr_history and self.test_psnr_history:
+            self._emit(check_r10(self.train_psnr_history[-1],
+                                 self.test_psnr_history[-1],
+                                 list(self.test_psnr_history)))
 
     def on_refine(self, *, relocated_count: int | None = None,
                   alive_count: int | None = None, pruned_count: int | None = None,

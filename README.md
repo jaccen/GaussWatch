@@ -19,8 +19,10 @@
 - [x] 采集层：`gausswatch/collector.py`（TrainingMonitor 事件驱动 API，线程安全，与 torch 解耦）
 - [x] Web 监控面板：`gausswatch/panel.py`（纯标准库 http.server，单页轮询，告警时间线）
 - [x] R10/R11/R15 实现 + 全部 16 条规则可运行，测试套件 65 passed（`tests/`）
+- [x] 框架接入层：`gausswatch/integrations/gsplat.py`（gsplat 适配器：strategy/eval 自动包装，refine 事件与 val PSNR 自动上报）与 `official_3dgs.py`（官方仓库适配器），API 逐行核实自两仓库 main 快照（2026-10-30）
+- [x] 接入文档：`examples/integrate_gsplat_simple_trainer.md`、`examples/integrate_official_3dgs.md`（逐挂接点行号 + 代码）
 - [x] 端到端演示：`examples/demo.py`（模拟训练触发 11 条告警，`--panel` 可选网页模式）
-- [ ] torch 侧接入示例（gsplat / 官方 3DGS 训练循环的真实挂接）
+- [ ] tiger 集群实测：torch 提取器 2 项测试（`test_signals_from_splats_shapes` / `test_export_filtered_ratio_matches_manual_mask`）需真实 torch/GPU 验证，公开 benchmark 前置
 - [ ] 公开 benchmark（tiger 集群，gsplat/官方实现对比）
 
 ## Quick Start
@@ -57,6 +59,25 @@ srv = PanelServer(m)             # 可选：实时面板
 srv.start(block=False)
 print(m.alerts)                  # [RuleAlert(rule='R3', severity='critical', ...)]
 ```
+
+### 接入真实训练（gsplat / 官方仓库）
+
+```python
+# gsplat examples/simple_trainer.py，三行自动接入：
+from gausswatch.integrations.gsplat import GsplatAdapter
+gw = GsplatAdapter()
+gw.wrap_strategy(trainer.strategy)   # densify 事件自动上报（R2/R3/R13）
+gw.wrap_eval(trainer)                # val PSNR 自动上报（R10）
+```
+
+逐步挂接（每步信号、导出保护、崩溃归因）见：
+
+- `examples/integrate_gsplat_simple_trainer.md` — gsplat main 快照逐行挂接说明
+- `examples/integrate_official_3dgs.md` — 官方 graphdeco-inria 仓库挂接说明
+
+API 核实声明：两份文档的行号与行为均逐行核对自 2026-10-30 拉取的仓库快照
+（`simple_trainer.py`、`strategy/mcmc.py`、`strategy/default.py`、`exporter.py`、
+官方 `train.py`、`scene/gaussian_model.py`），上游改动会导致行号漂移，请以引文代码为准。
 
 每条告警自带 `source` 字段，指向触发它的公开 issue / 失败模式编号。
 
