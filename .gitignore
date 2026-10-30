@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# 实验与输出
+outputs/
+runs/
+*.ply
+*.pt
+*.pth
+
+# IDE / 系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
