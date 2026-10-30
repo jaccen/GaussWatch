@@ -18,3 +18,5 @@ runs/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Upstream reference snapshots (mixed licenses, incl. Inria non-commercial) - local .temp only.temp/
