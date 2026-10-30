@@ -6,7 +6,7 @@
 > Automatic diagnosis and monitoring for 3D Gaussian Splatting training.
 > 把 3DGS 训练失败从"重跑+肉眼排查"变成"实时检测+自动归因+修复建议"。
 
-**状态**：MVP 开发完成（2026-10-30），规则引擎 + 采集层 + Web 面板已实现并通过 65 项测试
+**状态**：MVP 完成 + GPU 盒验证通过（2026-10-30），82 项测试全通过（本机/CI 80 + V100 2），规则引擎、采集层、Web 面板、双框架接入层就绪
 
 ## 它是什么
 
@@ -25,7 +25,8 @@
 - [x] 框架接入层：`gausswatch/integrations/gsplat.py`（gsplat 适配器：strategy/eval 自动包装，refine 事件与 val PSNR 自动上报）与 `official_3dgs.py`（官方仓库适配器），API 逐行核实自两仓库 main 快照（2026-10-30）
 - [x] 接入文档：`examples/integrate_gsplat_simple_trainer.md`、`examples/integrate_official_3dgs.md`（逐挂接点行号 + 代码）
 - [x] 端到端演示：`examples/demo.py`（模拟训练触发 11 条告警，`--panel` 可选网页模式）
-- [ ] tiger 集群实测：torch 提取器 2 项测试（`test_signals_from_splats_shapes` / `test_export_filtered_ratio_matches_manual_mask`）需真实 torch/GPU 验证，公开 benchmark 前置
+- [x] tiger 集群实测（Level-A）：torch 提取器 2 项测试 + 端到端冒烟通过（V100-32GB，torch 2.7.1+cu118，2026-10-30，`scripts/cluster_verify.sh`）
+- [ ] Level-B 实战验证：真实 gsplat 训练循环挂接（需指定基准数据集）+ 公开 benchmark（tiger 集群，gsplat/官方实现对比）
 - [ ] 公开 benchmark（tiger 集群，gsplat/官方实现对比）
 
 ## Quick Start
