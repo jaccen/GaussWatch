@@ -10,13 +10,8 @@ Test data derives from real issue evidence (census v0.2/v0.3):
 - #248: hundreds of stable steps then NaN collapse
 - KB patterns: OF-03 zero grad, DF-05 prune band, IF-02 zero scale, CF-07 seed variance
 
-P0 rules are runnable reference implementations -> tests must PASS.
-P1/P2 stubs (R10/R11/R15) -> xfail until B-phase.
+All 16 rules (P0/P1/P2) are runnable reference implementations -> tests must PASS.
 """
-import math
-
-import pytest
-
 from gausswatch.rules import (
     TrainingSnapshot, check_r1, check_r2, check_r3, check_r4, check_r5,
     check_r6, check_r7, check_r8, check_r9, check_r12, check_r13, check_r14,
@@ -195,15 +190,46 @@ def test_r16_param_effective_quiet():
     assert check_r16(snap(render_metric=110.0, render_metric_prev=100.0)) is None
 
 
-# ---- P1/P2 stubs: spec exists, implementation deferred to B-phase ----
-@pytest.mark.xfail(reason="B-phase implementation pending; spec in census v0.4 §R10")
-def test_r10_spec_stub():
-    check_r10(30.0, 24.0, [30.0, 29.5])
+# ---- R10 eval scissors (KB CF-03/CF-05) ----
+def test_r10_scissors_gap():
+    # train 30.0 vs test 24.0 -> 6dB gap > 3dB threshold (overfitting/data issue)
+    a = check_r10(30.0, 24.0, [24.0, 24.1])
+    assert a and "6.0dB" in a.message and "overfitting" in a.message
 
-@pytest.mark.xfail(reason="B-phase implementation pending; spec in census v0.4 §R11")
-def test_r11_spec_stub():
-    check_r11(15.0, 0.8, 0.95)
+def test_r10_post_peak_decline():
+    # test PSNR peaked 29.5 then two consecutive declines (CF-05)
+    a = check_r10(29.0, 29.2, [28.0, 29.0, 29.5, 29.4, 29.2])
+    assert a and "declining" in a.message and "29.50" in a.message
 
-@pytest.mark.xfail(reason="B-phase implementation pending; spec in census v0.4 §R15")
-def test_r15_spec_stub():
-    check_r15([30.1, 29.2, 30.8])  # std ~0.65dB > 0.5 (CF-07)
+def test_r10_healthy_quiet():
+    # 1dB gap and still rising -> quiet
+    assert check_r10(29.0, 28.0, [27.5, 27.8, 28.0]) is None
+
+
+# ---- R11 loss-component imbalance (KB OF-04/OF-06) ----
+def test_r11_regularization_dominates():
+    # reg 15.0 vs render 0.8 -> 18.75x > 10x threshold (OF-06)
+    a = check_r11(15.0, 0.8, 0.5)
+    assert a and "reg loss 15" in a.message and "10x" in a.message
+
+def test_r11_mask_overcoverage():
+    # mask covers 95% of pixels > 90% (OF-04)
+    a = check_r11(None, None, 0.95)
+    assert a and "95%" in a.message
+
+def test_r11_healthy_quiet():
+    assert check_r11(0.5, 1.0, 0.3) is None
+
+
+# ---- R15 cross-run variance (KB CF-07) ----
+def test_r15_high_seed_variance():
+    # 3 seeds, std ~0.80dB > 0.5dB -> nondeterministic operators suspected
+    a = check_r15([30.1, 29.2, 30.8])
+    assert a and "0.80dB" in a.message and "nondeterministic" in a.message
+
+def test_r15_stable_seeds_quiet():
+    assert check_r15([30.0, 30.1, 29.95]) is None
+
+def test_r15_insufficient_runs_quiet():
+    # need >= 2 runs for a meaningful std
+    assert check_r15([30.0]) is None

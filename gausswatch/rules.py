@@ -266,17 +266,49 @@ def check_r16(snap: TrainingSnapshot) -> RuleAlert | None:
     return None
 
 
-# P1/P2 rules with spec-only stubs (implemented in B-phase)
+# ---- R10: eval scissors (KB CF-03/CF-05) ----
 def check_r10(train_psnr, test_psnr, psnr_history):
-    """R10 eval scissors (KB CF-03/CF-05): gap > 3dB or post-peak decline."""
-    raise NotImplementedError("spec: research/failure-mode-census-v0.4.md §R10")
+    """Train/test PSNR scissors gap, or post-peak decline of test PSNR."""
+    msgs = []
+    if train_psnr is not None and test_psnr is not None:
+        gap = train_psnr - test_psnr
+        if gap > TRAIN_TEST_GAP_DB:
+            msgs.append(f"train/test gap {gap:.1f}dB > {TRAIN_TEST_GAP_DB}dB (overfitting/data issue)")
+    if psnr_history and len(psnr_history) >= 3:
+        # peak followed by two consecutive declines
+        peak = max(psnr_history)
+        peak_idx = psnr_history.index(peak)
+        tail = psnr_history[peak_idx:]
+        if len(tail) >= 3 and tail[-1] < tail[-2] < tail[-2 - 1]:
+            msgs.append(f"test PSNR declining after peak {peak:.2f}")
+    if msgs:
+        return _alert("R10", "warning", "; ".join(msgs), "KB CF-03+CF-05")
+    return None
 
 
+# ---- R11: loss-component imbalance (KB OF-04/OF-06) ----
 def check_r11(reg_loss, render_loss, mask_coverage):
-    """R11 loss-component imbalance (KB OF-04/OF-06)."""
-    raise NotImplementedError("spec: research/failure-mode-census-v0.4.md §R11")
+    """Regularization dominating render loss, or loss mask over-coverage."""
+    msgs = []
+    if reg_loss is not None and render_loss is not None and render_loss > 0:
+        if reg_loss > REG_LOSS_RATIO * render_loss:
+            msgs.append(f"reg loss {reg_loss:.3g} > {REG_LOSS_RATIO:.0f}x render loss {render_loss:.3g}")
+    if mask_coverage is not None and mask_coverage > MASK_COVER_HIGH:
+        msgs.append(f"loss mask covers {mask_coverage:.0%} of pixels (>90%)")
+    if msgs:
+        return _alert("R11", "warning", "; ".join(msgs), "KB OF-04+OF-06")
+    return None
 
 
+# ---- R15: cross-run variance (KB CF-07) ----
 def check_r15(run_psnrs):
-    """R15 cross-run variance (KB CF-07): std > 0.5dB -> nondeterministic ops."""
-    raise NotImplementedError("spec: research/failure-mode-census-v0.4.md §R15")
+    """Same-config multi-seed PSNR std > 0.5dB -> nondeterministic ops."""
+    import statistics
+    if not run_psnrs or len(run_psnrs) < 2:
+        return None
+    std = statistics.stdev(run_psnrs)
+    if std > CROSS_RUN_VAR_DB:
+        return _alert("R15", "warning",
+                      f"cross-run PSNR std {std:.2f}dB > {CROSS_RUN_VAR_DB}dB — "
+                      "nondeterministic operators suspected", "KB CF-07")
+    return None
