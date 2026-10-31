@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/jaccen/GaussWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/jaccen/GaussWatch/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
 > Automatic diagnosis and monitoring for 3D Gaussian Splatting training.
 > 把 3DGS 训练失败从"重跑+肉眼排查"变成"实时检测+自动归因+修复建议"。
