@@ -6,7 +6,7 @@
 > Automatic diagnosis and monitoring for 3D Gaussian Splatting training.
 > 把 3DGS 训练失败从"重跑+肉眼排查"变成"实时检测+自动归因+修复建议"。
 
-**状态**：MVP 完成 + GPU 盒验证通过（2026-10-30），82 项测试全通过（本机/CI 80 + V100 2），规则引擎、采集层、Web 面板、双框架接入层就绪
+**状态**：Level-A + Level-B GPU 盒验证全通过（2026-10-30），82 项测试全绿 + 真实 gsplat 训练闭环验证，规则引擎、采集层、Web 面板、双框架接入层与挂接注入器就绪
 
 ## 它是什么
 
@@ -26,8 +26,8 @@
 - [x] 接入文档：`examples/integrate_gsplat_simple_trainer.md`、`examples/integrate_official_3dgs.md`（逐挂接点行号 + 代码）
 - [x] 端到端演示：`examples/demo.py`（模拟训练触发 11 条告警，`--panel` 可选网页模式）
 - [x] tiger 集群实测（Level-A）：torch 提取器 2 项测试 + 端到端冒烟通过（V100-32GB，torch 2.7.1+cu118，2026-10-30，`scripts/cluster_verify.sh`）
-- [ ] Level-B 实战验证：真实 gsplat 训练循环挂接（需指定基准数据集）+ 公开 benchmark（tiger 集群，gsplat/官方实现对比）
-- [ ] 公开 benchmark（tiger 集群，gsplat/官方实现对比）
+- [x] Level-B 实战验证：gsplat v1.5.3 + tandt/truck 场景 1500 步真实训练闭环（V100，2026-10-30），wrap_strategy refine 透传 + wrap_eval 双轨 PSNR 采集（17.97→21.37）均生效，0 alerts（健康训练无误报）；注入器 `scripts/inject_gausswatch.py` 5 锚点幂等挂接 + finally 报告块
+- [ ] 公开 benchmark（tiger 集群，gsplat/官方实现诊断能力对比矩阵）
 
 ## Quick Start
 

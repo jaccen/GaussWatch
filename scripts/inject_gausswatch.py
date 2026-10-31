@@ -86,7 +86,15 @@ from gausswatch.integrations.gsplat import (
                 vram_allocated=torch.cuda.memory_allocated(),
                 vram_total=torch.cuda.get_device_properties(0).total_memory,
             )
-            raise""",
+            raise
+        finally:
+            _gw_stats = runner.gw.monitor.stats()
+            print(f"[GaussWatch] done @ step {_gw_stats['step']}: "
+                  f"{_gw_stats['n_alerts']} alerts "
+                  f"({_gw_stats['n_critical']} critical / "
+                  f"{_gw_stats['n_warning']} warning)")
+            for _a in runner.gw.monitor.alert_records():
+                print(f"[GaussWatch]   {_a['rule']}/{_a['severity']}: {_a['message']}")""",
     ),
 ]
 
