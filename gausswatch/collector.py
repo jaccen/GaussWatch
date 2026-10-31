@@ -209,10 +209,16 @@ class TrainingMonitor:
         self._emit(check_r16(s))
         self._prev_render_metric = metric
 
-    def on_crash(self, step: int, error_type: str, *,
+    def on_crash(self, step: int | None, error_type: str, *,
                  vram_allocated: int | None = None,
                  vram_total: int | None = None):
-        """Call in the exception handler of a training crash (R1 + R4)."""
+        """Call in the exception handler of a training crash (R1 + R4).
+
+        step=None falls back to the last step seen by on_step — the exact
+        crash step is often unknown at exception time (async CUDA errors).
+        """
+        if step is None:
+            step = self._step
         s = TrainingSnapshot(step=step, error_type=error_type,
                              crash_step=step, last_event_step=self._last_relocate_step,
                              crash_error_type=error_type,

@@ -224,12 +224,19 @@ class GsplatAdapter:
         return trainer
 
     def autowire(self, trainer):
-        """One-call wiring: wrap trainer.strategy and trainer.eval."""
-        if not hasattr(trainer, "strategy"):
+        """One-call wiring: wrap the trainer's strategy and eval.
+
+        gsplat's Runner keeps the strategy at trainer.cfg.strategy (both the
+        2026-10-30 main snapshot and v1.5.3); trainer.strategy is accepted
+        too for other layouts. Loud failure if neither exists.
+        """
+        strategy = (getattr(trainer, "strategy", None)
+                    or getattr(getattr(trainer, "cfg", None), "strategy", None))
+        if strategy is None:
             raise AttributeError(
-                "autowire: trainer has no .strategy attribute — construct "
-                "GsplatAdapter and call wrap_strategy/wrap_eval on the "
-                "objects you have instead.")
-        self.wrap_strategy(trainer.strategy)
+                "autowire: no strategy found (looked for trainer.strategy "
+                "and trainer.cfg.strategy) — construct GsplatAdapter and "
+                "call wrap_strategy/wrap_eval on the objects you have.")
+        self.wrap_strategy(strategy)
         self.wrap_eval(trainer)
         return self
