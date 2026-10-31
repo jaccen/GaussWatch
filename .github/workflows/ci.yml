@@ -45,3 +45,16 @@ jobs:
         run: pip install -e .
       - name: Run Class-B benchmark (fails if TPR<100% or FPR>0)
         run: python benchmarks/log_replay.py --ci
+
+  benchmark-a:
+    name: Class-A runtime injection (TPR/FPR regression gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package
+        run: pip install -e .
+      - name: Run Class-A benchmark (fails if TPR<100% or FPR>0)
+        run: python benchmarks/runtime_inject.py --ci

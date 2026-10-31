@@ -9,7 +9,7 @@
 
 **状态**：Level-A + Level-B GPU 盒验证全通过（2026-10-30），82 项测试全绿 + 真实 gsplat 训练闭环验证，规则引擎、采集层、Web 面板、双框架接入层与挂接注入器就绪
 
-> **Benchmark**：Class-B 日志回放 TPR 6/6 = 100%、FPR 0/5 = 0%（6 个真实 issue 故障签名全检出，5 健康基线零误报）—— 见 [benchmarks/results.md](benchmarks/results.md)，`python benchmarks/log_replay.py` 一键复现
+> **Benchmark**：Class-A 运行时注入 + Class-B 日志回放，合计 **13 个故障场景 100% 检出、6 个健康基线零误报**，覆盖 12 条规则，R4 归因准确率 100%——见 [benchmarks/results.md](benchmarks/results.md)，`python benchmarks/runtime_inject.py && python benchmarks/log_replay.py` 一键复现
 
 ## 它是什么
 
@@ -57,7 +57,7 @@ GaussWatch 是 3DGS（3D Gaussian Splatting）训练过程的自动诊断与监�
 - **时间收益**：从"崩溃后回看 / 训练结束看图"到"实时检出（≤ `check_every`，默认 100 步）"，避免 48 小时级训练的整次重跑
 - **诊断收益**：从"肉眼 + 重跑"到"自动归因 + 修复建议"，每条告警自带 `source` 字段指向触发它的公开 issue，可直接照着修
 - **工业化收益**：落地团队无需 3DGS 经验即可定位失败，降低调参门槛，把个人经验变成可复用的规则
-- **可验证**：Class-B 日志回放 benchmark 自证，6 个真实 issue 故障签名 100% 检出、5 个健康基线零误报（见上方 Benchmark 引用块）
+- **可验证**：公开 benchmark 自证，Class-A 运行时注入 + Class-B 日志回放合计 13 个故障场景 100% 检出、6 个健康基线零误报、R4 归因准确率 100%（见上方 Benchmark 引用块）
 
 ## 当前进展
 
@@ -74,7 +74,7 @@ GaussWatch 是 3DGS（3D Gaussian Splatting）训练过程的自动诊断与监�
 - [x] 端到端演示：`examples/demo.py`（模拟训练触发 11 条告警，`--panel` 可选网页模式）
 - [x] tiger 集群实测（Level-A）：torch 提取器 2 项测试 + 端到端冒烟通过（V100-32GB，torch 2.7.1+cu118，2026-10-30，`scripts/cluster_verify.sh`）
 - [x] Level-B 实战验证：gsplat v1.5.3 + tandt/truck 场景 1500 步真实训练闭环（V100，2026-10-30），wrap_strategy refine 透传 + wrap_eval 双轨 PSNR 采集（17.97→21.37）均生效，0 alerts（健康训练无误报）；注入器 `scripts/inject_gausswatch.py` 5 锚点幂等挂接 + finally 报告块
-- [ ] 公开 benchmark（tiger 集群，gsplat/官方实现诊断能力对比矩阵）
+- [x] 公开 benchmark：Class-A 运行时注入（7 场景）+ Class-B 日志回放（6 场景），合计 13/13 检出、0 误报，覆盖 12 条规则（见 [benchmarks/results.md](benchmarks/results.md)）
 
 ## Quick Start
 
