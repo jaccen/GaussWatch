@@ -9,6 +9,8 @@
 
 **状态**：Level-A + Level-B GPU 盒验证全通过（2026-10-30），82 项测试全绿 + 真实 gsplat 训练闭环验证，规则引擎、采集层、Web 面板、双框架接入层与挂接注入器就绪
 
+> **Benchmark**：Class-B 日志回放 TPR 6/6 = 100%、FPR 0/5 = 0%（6 个真实 issue 故障签名全检出，5 健康基线零误报）—— 见 [benchmarks/results.md](benchmarks/results.md)，`python benchmarks/log_replay.py` 一键复现
+
 ## 它是什么
 
 训练 3DGS 时最常见的失败——显存耗尽、NaN、floaters、densification 异常——目前只能靠"重跑 + 肉眼看图"排查（官方仓库 667 个 open issues 中仅标题级命中 OOM 就有 44 个）。GaussWatch 监控训练过程，实时检测失败模式，输出归因与修复建议。
